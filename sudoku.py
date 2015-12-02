@@ -21,9 +21,9 @@ def read_input():
             line = []
             for char in input_line:
                 if char in ['1', '2', '3', '4', '5', '6', '7', '8', '9']:
-                    line.append([[int(char)],])
+                    line.append([int(char)])
                 elif char == '.':
-                    line.append([[1, 2, 3, 4, 5, 6, 7, 8, 9],])
+                    line.append([1, 2, 3, 4, 5, 6, 7, 8, 9])
                 else:
                     print("Unknown char: %s" % ord(char))
             board.append(line)
@@ -31,25 +31,25 @@ def read_input():
 
 def propagate_single_digit_in_cel(row, col):
     changes = False
-    number_to_remove = board[row][col][0][0]
+    number_to_remove = board[row][col][0]
     for r in range(0, 9):
-        if r != row and number_to_remove in board[r][col][0]:
-            board[r][col][0].remove(number_to_remove)
-            assert len(board[r][col][0]) > 0
+        if r != row and number_to_remove in board[r][col]:
+            board[r][col].remove(number_to_remove)
+            assert len(board[r][col]) > 0
             changes = True
     for c in range(0, 9):
-        if c != col and number_to_remove in board[row][c][0]:
-            board[row][c][0].remove(number_to_remove)
-            assert len(board[row][c][0]) > 0
+        if c != col and number_to_remove in board[row][c]:
+            board[row][c].remove(number_to_remove)
+            assert len(board[row][c]) > 0
             changes = True
     square_num = coordinates_to_square(row, col)
     row_in_square_start = square_to_row(square_num)
     for r in range(row_in_square_start, row_in_square_start + 3):
         col_in_square_start = square_to_col(square_num)
         for c in range(col_in_square_start, col_in_square_start + 3):
-            if r != row and c != col and number_to_remove in board[r][c][0]:
-                board[r][c][0].remove(number_to_remove)
-                assert len(board[r][c][0]) > 0
+            if r != row and c != col and number_to_remove in board[r][c]:
+                board[r][c].remove(number_to_remove)
+                assert len(board[r][c]) > 0
                 changes = True
     return changes
 
@@ -58,10 +58,10 @@ def propagate_constraints():
     changed = False
     for row in range(0, len(board)):
         for col in range(0, len(board[0])):
-            if len(board[row][col][0]) == 1:
+            if len(board[row][col]) == 1:
                 if propagate_single_digit_in_cel(row, col):
                     print('Propagating single digit {d} from cell [{r}, {c}]'
-                          .format(d=board[row][col][0][0], r=row+1, c=col+1))
+                          .format(d=board[row][col][0], r=row+1, c=col+1))
                     print_board()
                     changed = True
     return changed
@@ -77,7 +77,7 @@ def logic_single_candidate_square():
         candidates_found = {x: [0, []] for x in range(1,10)}
         for r in range(row_in_square_start, row_in_square_start + 3):
             for c in range(col_in_square_start, col_in_square_start + 3):
-                for candidate in board[r][c][0]:
+                for candidate in board[r][c]:
                     candidates_found[candidate][0] += 1
                     candidates_found[candidate][1].append((r, c))
         if logic_single_candidate_2nd_stage(candidates_found,
@@ -93,11 +93,11 @@ def logic_single_candidate_2nd_stage(candidates_found, searching_in):
             r, c = candidates_found[candidate][1][0]
             # remove all other candidates from this cell
             # if it's not already a single candidate
-            if len(board[r][c][0]) > 1:
+            if len(board[r][c]) > 1:
                 print('Found single candidate for number {d} in {thing} at '
                       '[{r}, {c}]'.format(d=candidate, thing=searching_in,
                                           r=r+1, c=c+1))
-                board[r][c][0] = [candidate]
+                board[r][c] = [candidate]
                 changed = True
     return changed
 
@@ -109,7 +109,7 @@ def logic_single_candidate_row():
     for r in range(len(board)):
         candidates_found = {x: [0, []] for x in range(1,10)}
         for c in range(len(board[0])):
-            for candidate in board[r][c][0]:
+            for candidate in board[r][c]:
                 candidates_found[candidate][0] += 1
                 candidates_found[candidate][1].append((r, c))
         if logic_single_candidate_2nd_stage(candidates_found,
@@ -125,7 +125,7 @@ def logic_single_candidate_columnn():
     for c in range(len(board[0])):
         candidates_found = {x: [0, []] for x in range(1,10)}
         for r in range(len(board)):
-            for candidate in board[r][c][0]:
+            for candidate in board[r][c]:
                 candidates_found[candidate][0] += 1
                 candidates_found[candidate][1].append((r, c))
         if logic_single_candidate_2nd_stage(candidates_found,
@@ -168,7 +168,7 @@ def print_board():
         for cell in row:
             digits = []
             for candidate in range(1, 10):
-                digits.append(str(candidate) if candidate in cell[0] else ' ')
+                digits.append(str(candidate) if candidate in cell else ' ')
             print('[%s]' % ''.join(digits), end='')
         print('')
     print('')
@@ -179,7 +179,7 @@ def print_final_board():
     for row in board:
         print('%s: ' % row_num, end='')
         row_num += 1
-        cells = [str(cell[0][0]) for cell in row]
+        cells = [str(cell[0]) for cell in row]
         print('%s' % ''.join(cells))
     print('')
 
@@ -188,7 +188,7 @@ def validate():
     """Check if the puzzle was solved (only 1 candidate in each cell)"""
     for row in board:
         for cell in row:
-            if len(cell[0]) != 1:
+            if len(cell) != 1:
                 return False
     return True
 
