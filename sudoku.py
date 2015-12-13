@@ -1,6 +1,8 @@
 __author__ = "Maciej 'kasprzol' Kasprzyk"
 
 board = []
+class ValidationError(Exception):
+    pass
 
 
 def coordinates_to_square(row, col):
@@ -35,12 +37,14 @@ def propagate_single_digit_in_cel(row, col):
     for r in range(0, 9):
         if r != row and number_to_remove in board[r][col]:
             board[r][col].remove(number_to_remove)
-            assert len(board[r][col]) > 0
+            if len(board[r][col]) == 0:
+                raise ValidationError()
             changes = True
     for c in range(0, 9):
         if c != col and number_to_remove in board[row][c]:
             board[row][c].remove(number_to_remove)
-            assert len(board[row][c]) > 0
+            if len(board[row][c]) == 0:
+                raise ValidationError()
             changes = True
     square_num = coordinates_to_square(row, col)
     row_in_square_start = square_to_row(square_num)
@@ -49,7 +53,8 @@ def propagate_single_digit_in_cel(row, col):
         for c in range(col_in_square_start, col_in_square_start + 3):
             if r != row and c != col and number_to_remove in board[r][c]:
                 board[r][c].remove(number_to_remove)
-                assert len(board[r][c]) > 0
+                if len(board[r][c]) == 0:
+                    raise ValidationError()
                 changes = True
     return changes
 
