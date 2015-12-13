@@ -1,6 +1,15 @@
 __author__ = "Maciej 'kasprzol' Kasprzyk"
 
+from copy import copy, deepcopy
+
+# "Drugs^W Globals are bad, m'kay. You shouldn't do globals. If you do them,
+# you're bad, because globals are bad, m'kay. It's a bad thing to do globals, so
+# don't be bad by doing globals, m'kay, that'd be bad. Globals are bad."
 board = []
+board_state_stack = []
+solutions = []
+
+
 class ValidationError(Exception):
     pass
 
@@ -240,6 +249,34 @@ def logic():
     return False
 
 
+def bruteforce_solve():
+    for r in range(len(board)):
+        for c in range(len(board[0])):
+            # there is more than 1 candidate, try them all
+            if len(board[r][c]) > 1:
+                cell = copy(board[r][c])
+                for candidate in cell:
+                    global board
+                    board_state_stack.append(deepcopy(board))
+                    board[r][c] = [candidate]
+                    try:
+                        solve()
+                        if validate():
+                            existing_solution = False
+                            for s in solutions:
+                                if equal_boards(board, s):
+                                    existing_solution = True
+                                    break
+                            if not existing_solution:
+                                solutions.append(deepcopy(board))
+                                print_final_board()
+                    except ValidationError:
+                        pass
+                    finally:
+                        board = board_state_stack.pop()
+    return False
+
+
 def solve():
     changed = True
     while changed:
@@ -250,6 +287,8 @@ def solve():
         if logic():
             changed = True
             continue
+    if not validate():
+        bruteforce_solve()
 
 
 def print_board():
@@ -284,17 +323,28 @@ def validate():
                 return False
     return True
 
+
+def equal_boards(board1, board2):
+    for r in range(len(board1)):
+        for c in range(len(board1[0])):
+            if board1[r][c] != board2[r][c]:
+                return False
+    return True
+
+
 def main():
     read_input()
     print_board()
     solve()
-    if validate():
-        print("\nA solution was found:")
-        print_final_board()
+    if len(solutions) > 0:
+        print("\nA solution were found:")
+        while len(solutions) > 0:
+            global board
+            board = solutions.pop()
+            print_final_board()
     else:
         print("\nA solution could not been found :( :")
         print_board()
-
 
 
 if __name__ == "__main__":
