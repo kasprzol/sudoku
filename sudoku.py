@@ -149,8 +149,95 @@ def logic_single_candidate():
     return False
 
 
+def logic_row_candidates_in_square():
+    """
+    This function checks if a specific digit candidates for a row are all in one
+    square. This means that all other candidates for this digit in this square
+    are impossible and can be removed.
+
+    For example: given fallowing row of candidates grouped by their squares:
+    [129][134][179] [245][378][689] [567][567][678]
+    The candidates for digit 1 are all in the first square. So the digit for
+    that row must be in that square and all other candidates for digit 1 in the
+    first square can be eliminated.
+    """
+    changed = False
+    for r in range(len(board)):
+        digits_found_in_square = {d: set() for d in range(1, 10)}
+        for c in range(len(board[0])):
+            for candidate in board[r][c]:
+                digits_found_in_square[candidate].add(coordinates_to_square(
+                    r, c))
+        for digit in digits_found_in_square:
+            if len(digits_found_in_square[digit]) == 1:
+                square = digits_found_in_square[digit].pop()
+                # remove all candidates `digit` from `square` that are not on
+                # row `r`
+                row_start = square_to_row(square)
+                col_start = square_to_col(square)
+                for x in range(row_start, row_start + 3):
+                    if x == r:
+                        continue
+                    for y in range(col_start, col_start + 3):
+                        if digit in board[x][y]:
+                            changed = True
+                            board[x][y].remove(digit)
+                            if len(board[x][y]) == 0:
+                                raise ValidationError()
+                if changed:
+                    print("Removing candidates for number {d} in square "
+                        "{square} that aren't on row {r}".format(
+                            d=digit,square=square+1, r=r+1))
+                    return changed
+    return changed
+
+
+def logic_column_candidates_in_square():
+    """
+    The same logic as in `logic_row_candidates_in_square` but for columns
+    """
+    changed = False
+    for c in range(len(board[0])):
+        digits_found_in_square = {d: set() for d in range(1, 10)}
+        for r in range(len(board)):
+            for candidate in board[r][c]:
+                digits_found_in_square[candidate].add(coordinates_to_square(
+                    r, c))
+        for digit in digits_found_in_square:
+            if len(digits_found_in_square[digit]) == 1:
+                square = digits_found_in_square[digit].pop()
+                # remove all candidates `digit` from `square` that are not on
+                # column `c`
+                row_start = square_to_row(square)
+                col_start = square_to_col(square)
+                for y in range(col_start, col_start + 3):
+                    if y == c:
+                        continue
+                    for x in range(row_start, row_start + 3):
+                        if digit in board[x][y]:
+                            changed = True
+                            board[x][y].remove(digit)
+                            if len(board[x][y]) == 0:
+                                raise ValidationError()
+                if changed:
+                    print("Removing candidates for number {d} in square "
+                        "{square} that aren't on column {c}".format(
+                            d=digit, square=square+1, c=c+1))
+                    return changed
+    return changed
+
+
 def logic():
-    return logic_single_candidate()
+    if logic_single_candidate():
+        print_board()
+        return True
+    if logic_row_candidates_in_square():
+        print_board()
+        return True
+    if logic_column_candidates_in_square():
+        print_board()
+        return True
+    return False
 
 
 def solve():
