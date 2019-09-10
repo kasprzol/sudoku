@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 __author__ = "Maciej 'kasprzol' Kasprzyk"
 
 from copy import copy, deepcopy
@@ -236,6 +238,34 @@ def logic_column_candidates_in_square():
     return changed
 
 
+def logic_same_digits_groups_in_row():
+    """
+    When we have a set of candidates in a row:
+    [35] 1 7 | 4 [3589] [589] | 6 [35] 2
+    We can see that we have 2 cells with exactly the same 2 candidates ([35]).
+    This means we can remove those candidates from other cells and reduce the
+    row to:
+    [35] 1 7 | 4 [89] [89] | 6 [35] 2
+    This is also true for bigger groups (e.g. 4 cells with the same 4
+    candidates).
+    """
+    for r in range(len(board)):
+        columns_by_candidates = defaultdict(list)
+        for c in range(len(board[0])):
+            if len(board[r][c]) > 1:
+                columns_by_candidates[tuple(board[r][c])].append(c)
+        for candidate_set in columns_by_candidates:
+            # if there is X columns with X same candidates
+            if len(columns_by_candidates[candidate_set]) == len(candidate_set):
+                # remove candidates from candidate_set from other candidates in
+                # the row
+                for c in range(len(board[0])):
+                    if c not in columns_by_candidates[candidate_set]:
+                        for candidate in candidate_set:
+                            if candidate in board[r][c]:
+                                board[r][c].remove(candidate)
+
+
 def logic():
     if logic_single_candidate():
         print_board()
@@ -256,7 +286,6 @@ def bruteforce_solve():
             if len(board[r][c]) > 1:
                 cell = copy(board[r][c])
                 for candidate in cell:
-                    global board
                     board_state_stack.append(deepcopy(board))
                     board[r][c] = [candidate]
                     try:
@@ -273,6 +302,7 @@ def bruteforce_solve():
                     except ValidationError:
                         pass
                     finally:
+                        #global board
                         board = board_state_stack.pop()
     return False
 
