@@ -249,6 +249,7 @@ def logic_same_digits_groups_in_row():
     This is also true for bigger groups (e.g. 4 cells with the same 4
     candidates).
     """
+    changed = False
     for r in range(len(board)):
         columns_by_candidates = defaultdict(list)
         for c in range(len(board[0])):
@@ -264,6 +265,33 @@ def logic_same_digits_groups_in_row():
                         for candidate in candidate_set:
                             if candidate in board[r][c]:
                                 board[r][c].remove(candidate)
+                                changed = True
+    return changed
+
+
+def logic_same_digits_groups_in_column():
+    """
+    Same as logic_same_digits_groups_in_row() but for columns.
+    """
+    changed = False
+    for c in range(len(board[0])):
+        rows_by_candidates = defaultdict(list)
+        for r in range(len(board)):
+            if len(board[r][c]) > 1:
+                rows_by_candidates[tuple(board[r][c])].append(r)
+        for candidate_set in rows_by_candidates:
+            # if there is X columns with X same candidates
+            if len(rows_by_candidates[candidate_set]) == len(candidate_set):
+                # remove candidates from candidate_set from other candidates in
+                # the column.
+                for r in range(len(board)):
+                    if r not in rows_by_candidates[candidate_set]:
+                        for candidate in candidate_set:
+                            if candidate in board[r][c]:
+                                board[r][c].remove(candidate)
+                                changed = True
+    return changed
+
 
 
 def logic():
