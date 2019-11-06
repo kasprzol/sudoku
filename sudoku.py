@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+import colorama
+
 __author__ = "Maciej 'kasprzol' Kasprzyk"
 
 from copy import copy, deepcopy
@@ -49,13 +51,19 @@ def propagate_single_digit_in_cel(row, col):
         if r != row and number_to_remove in board[r][col]:
             board[r][col].remove(number_to_remove)
             if len(board[r][col]) == 0:
-                raise ValidationError()
+                msg = f"Propagating '{number_to_remove}' from cell [{row + 1}" \
+                      f", {col + 1}] would leave cell [{r + 1}, {col + 1}] " \
+                      f"empty!"
+                raise ValidationError(msg)
             changes = True
     for c in range(0, 9):
         if c != col and number_to_remove in board[row][c]:
             board[row][c].remove(number_to_remove)
             if len(board[row][c]) == 0:
-                raise ValidationError()
+                msg = f"Propagating '{number_to_remove}' from cell [" \
+                      f"{row + 1}, {col + 1}] would leave cell [{row + 1}, " \
+                      f"{c + 1}] empty!"
+                raise ValidationError(msg)
             changes = True
     square_num = coordinates_to_square(row, col)
     row_in_square_start = square_to_row(square_num)
@@ -65,7 +73,10 @@ def propagate_single_digit_in_cel(row, col):
             if r != row and c != col and number_to_remove in board[r][c]:
                 board[r][c].remove(number_to_remove)
                 if len(board[r][c]) == 0:
-                    raise ValidationError()
+                    msg = f"Propagating '{number_to_remove}' from cell [" \
+                          f"{row + 1}, {col + 1}] would leave cell [{r + 1}, " \
+                          f"{c + 1}] empty!"
+                    raise ValidationError(msg)
                 changes = True
     return changes
 
@@ -76,8 +87,8 @@ def propagate_constraints():
         for col in range(0, len(board[0])):
             if len(board[row][col]) == 1:
                 if propagate_single_digit_in_cel(row, col):
-                    print('Propagating single digit {d} from cell [{r}, {c}]'
-                          .format(d=board[row][col][0], r=row+1, c=col+1))
+                    print(f"Propagating single digit {board[row][col][0]} from "
+                          f"cell [{row + 1}, {col + 1}]")
                     print_board()
                     changed = True
     return changed
@@ -110,9 +121,8 @@ def logic_single_candidate_2nd_stage(candidates_found, searching_in):
             # remove all other candidates from this cell
             # if it's not already a single candidate
             if len(board[r][c]) > 1:
-                print('Found single candidate for number {d} in {thing} at '
-                      '[{r}, {c}]'.format(d=candidate, thing=searching_in,
-                                          r=r+1, c=c+1))
+                print(f"Found single candidate for number {candidate} in "
+                      f"{searching_in} at [{r + 1}, {c + 1}]")
                 board[r][c] = [candidate]
                 changed = True
     return changed
@@ -129,7 +139,7 @@ def logic_single_candidate_row():
                 candidates_found[candidate][0] += 1
                 candidates_found[candidate][1].append((r, c))
         if logic_single_candidate_2nd_stage(candidates_found,
-                                            'row %s' % (r + 1)):
+                                            f"row {r + 1}"):
             changed = True
     return changed
 
@@ -139,13 +149,13 @@ def logic_single_candidate_columnn():
     # then it must be that number (disregard other candidates in that square)
     changed = False
     for c in range(len(board[0])):
-        candidates_found = {x: [0, []] for x in range(1,10)}
+        candidates_found = {x: [0, []] for x in range(1, 10)}
         for r in range(len(board)):
             for candidate in board[r][c]:
                 candidates_found[candidate][0] += 1
                 candidates_found[candidate][1].append((r, c))
         if logic_single_candidate_2nd_stage(candidates_found,
-                                            'column %s' % (c + 1)):
+                                            f"column {c + 1}"):
             changed = True
     return changed
 
@@ -194,11 +204,13 @@ def logic_row_candidates_in_square():
                             changed = True
                             board[x][y].remove(digit)
                             if len(board[x][y]) == 0:
-                                raise ValidationError()
+                                msg = f"Removing candidate {digit} from square" \
+                                      f" {square + 1} would leave cell [" \
+                                      f"{x + 1 }, {y + 1}] empty."
+                                raise ValidationError(msg)
                 if changed:
-                    print("Removing candidates for number {d} in square "
-                        "{square} that aren't on row {r}".format(
-                            d=digit,square=square+1, r=r+1))
+                    print(f"Removing candidates for number {digit} in square "
+                          f"{square + 1} that are not on row {r + 1}")
                     return changed
     return changed
 
@@ -229,11 +241,13 @@ def logic_column_candidates_in_square():
                             changed = True
                             board[x][y].remove(digit)
                             if len(board[x][y]) == 0:
-                                raise ValidationError()
+                                msg = f"Removing candidate {digit} from square" \
+                                      f" {square + 1} would leave cell [" \
+                                      f"{x + 1 }, {y + 1}] empty."
+                                raise ValidationError(msg)
                 if changed:
-                    print("Removing candidates for number {d} in square "
-                        "{square} that aren't on column {c}".format(
-                            d=digit, square=square+1, c=c+1))
+                    print(f"Removing candidates for number {digit} in square "
+                          f"{square + 1} that are not on column {c + 1}")
                     return changed
     return changed
 
@@ -266,6 +280,8 @@ def logic_same_digits_groups_in_row():
                             if candidate in board[r][c]:
                                 board[r][c].remove(candidate)
                                 changed = True
+                                print(f"Removing {candidate} from cell ["
+                                      f"{r + 1}, {c + 1}]")
     return changed
 
 
@@ -280,7 +296,7 @@ def logic_same_digits_groups_in_column():
             if len(board[r][c]) > 1:
                 rows_by_candidates[tuple(board[r][c])].append(r)
         for candidate_set in rows_by_candidates:
-            # if there is X columns with X same candidates
+            # if there is X rows with X same candidates
             if len(rows_by_candidates[candidate_set]) == len(candidate_set):
                 # remove candidates from candidate_set from other candidates in
                 # the column.
@@ -290,6 +306,8 @@ def logic_same_digits_groups_in_column():
                             if candidate in board[r][c]:
                                 board[r][c].remove(candidate)
                                 changed = True
+                                print(f"Removing {candidate} from cell ["
+                                      f"{r + 1}, {c + 1}]")
     return changed
 
 
@@ -308,6 +326,7 @@ def logic():
 
 
 def bruteforce_solve():
+    global board
     for r in range(len(board)):
         for c in range(len(board[0])):
             # there is more than 1 candidate, try them all
@@ -330,7 +349,6 @@ def bruteforce_solve():
                     except ValidationError:
                         pass
                     finally:
-                        #global board
                         board = board_state_stack.pop()
     return False
 
@@ -352,13 +370,15 @@ def solve():
 def print_board():
     row_num = 1
     for row in board:
-        print('%s: ' % row_num, end='')
+        print(f'{row_num}: ', end='')
         row_num += 1
         for cell in row:
             digits = []
             for candidate in range(1, 10):
                 digits.append(str(candidate) if candidate in cell else ' ')
-            print('[%s]' % ''.join(digits), end='')
+            cell_str = '[' + (colorama.Fore.GREEN if len(cell) == 1 else colorama.Fore.RED)
+            cell_str += ''.join(digits) + colorama.Fore.RESET + ']'
+            print(cell_str, end='')
         print('')
     print('')
 
@@ -366,10 +386,10 @@ def print_board():
 def print_final_board():
     row_num = 1
     for row in board:
-        print('%s: ' % row_num, end='')
+        print('%s:  ' % row_num, end='')
         row_num += 1
         cells = [str(cell[0]) for cell in row]
-        print('%s' % ''.join(cells))
+        print('%s' % ' '.join(cells))
     print('')
 
 
@@ -391,6 +411,7 @@ def equal_boards(board1, board2):
 
 
 def main():
+    colorama.init()
     read_input()
     print_board()
     solve()
