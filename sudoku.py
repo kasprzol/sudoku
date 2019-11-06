@@ -311,6 +311,45 @@ def logic_same_digits_groups_in_column():
     return changed
 
 
+def logic_same_digits_groups_in_square():
+    """
+    Same as logic_same_digits_groups_in_row() but for squares.
+    """
+    changed = False
+    for square in range(9):
+        cells_by_candidates = defaultdict(list)
+        row_start = square_to_row(square)
+        col_start = square_to_col(square)
+        for r in range(row_start, row_start + 3):
+            for c in range(col_start, col_start + 3):
+                if len(board[r][c]) > 1:
+                    cells_by_candidates[tuple(board[r][c])].append((r, c))
+        for candidate_set in cells_by_candidates:
+            # if there is X cells with X same candidates
+            if len(cells_by_candidates[candidate_set]) == len(candidate_set):
+                # remove candidates from candidate_set from other candidates in
+                # the square
+                for r in range(row_start, row_start + 3):
+                    for c in range(col_start, col_start + 3):
+                        if (r, c) not in cells_by_candidates[candidate_set]:
+                            for candidate in candidate_set:
+                                if candidate in board[r][c]:
+                                    board[r][c].remove(candidate)
+                                    changed = True
+                                    print(f"Removing {candidate} from cell ["
+                                          f"{r + 1}, {c + 1}]")
+    return changed
+
+
+def logic_same_digits_groups():
+    if logic_same_digits_groups_in_row():
+        return True
+    if logic_same_digits_groups_in_column():
+        return True
+    if logic_same_digits_groups_in_square():
+        return True
+    return False
+
 
 def logic():
     if logic_single_candidate():
@@ -320,6 +359,9 @@ def logic():
         print_board()
         return True
     if logic_column_candidates_in_square():
+        print_board()
+        return True
+    if logic_same_digits_groups():
         print_board()
         return True
     return False
@@ -363,7 +405,9 @@ def solve():
         if logic():
             changed = True
             continue
-    if not validate():
+    if validate():
+        solutions.append(deepcopy(board))
+    else:
         bruteforce_solve()
 
 
