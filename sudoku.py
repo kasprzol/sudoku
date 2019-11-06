@@ -40,7 +40,7 @@ def read_input():
                 elif char == '.':
                     line.append([1, 2, 3, 4, 5, 6, 7, 8, 9])
                 else:
-                    print("Unknown char: %s" % ord(char))
+                    print(f"Unknown char: {ord(char)}")
             board.append(line)
 
 
@@ -108,7 +108,7 @@ def logic_single_candidate_square():
                     candidates_found[candidate][0] += 1
                     candidates_found[candidate][1].append((r, c))
         if logic_single_candidate_2nd_stage(candidates_found,
-                                            'square %s' % (square + 1)):
+                                            f"square {square + 1}"):
             changed = True
     return changed
 
@@ -430,10 +430,10 @@ def print_board():
 def print_final_board():
     row_num = 1
     for row in board:
-        print('%s:  ' % row_num, end='')
+        print(f'{row_num}:  ', end='')
         row_num += 1
         cells = [str(cell[0]) for cell in row]
-        print('%s' % ' '.join(cells))
+        print(f"{' '.join(cells)}")
     print('')
 
 
